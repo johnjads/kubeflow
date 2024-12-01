@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: nlp-pipeline-
+spec:
+  entrypoint: nlp-pipeline
+  templates:
+    - name: nlp-pipeline
+      steps:
+        - - name: preprocess
+            template: preprocess
+        - - name: create-dataset
+            template: create-dataset
+        - - name: train-model
+            template: train-model
+        - - name: deploy-model
+            template: deploy-model
+
+    - name: preprocess
+      container:
+        image: python:3.9
+        command: ["python", "/app/utils/preprocessing.py"]
+        args: ["--input_csv", "/data/input.csv", "--output_csv", "/data/output.csv"]
+        volumeMounts:
+          - name: data-volume
+            mountPath: /data
+
+    - name: create-dataset
+      container:
+        image: python:3.9
+        command: ["python", "/app/components/create_dataset.py"]
+        args: ["--project_id", "{{workflow.parameters.project_id}}", "--region", "{{workflow.parameters.region}}", "--dataset_name", "{{workflow.parameters.dataset_name}}"]
+
+    - name: train-model
+      container:
+        image: python:3.9
+        command: ["python", "/app/components/train_model.py"]
+        args: ["--project_id", "{{workflow.parameters.project_id}}", "--region", "{{workflow.parameters.region}}", "--dataset_id", "{{steps.create-dataset.outputs.result}}", "--model_name", "{{workflow.parameters.model_name}}"]
+
+    - name: deploy-model
+      container:
+        image: python:3.9
+        command: ["python", "/app/components/deploy_model.py"]
+        args: ["--project_id", "{{workflow.parameters.project_id}}", "--region", "{{workflow.parameters.region}}", "--model_id", "{{steps.train-model.outputs.result}}"]
+
+  volumes:
+    - name: data-volume
+      emptyDir: {}

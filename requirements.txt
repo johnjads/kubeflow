@@ -1,0 +1,12 @@
+google-cloud-automl==2.6.0
+kubeflow-pipelines==1.8.10
+kfp==1.8.10
+google-auth==2.14.1
+google-auth-oauthlib==0.5.2
+pandas==1.4.2
+numpy==1.23.0
+scikit-learn==1.0.2
+tensorflow==2.9.0
+requests==2.28.1
+protobuf==3.20.0
+pyyaml==6.0
